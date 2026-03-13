@@ -1,0 +1,86 @@
+spring:
+  application:
+    name: exp-channel-management
+    version: 1.0.0
+    description: Experience layer API for channel management journeys
+    team:
+      name: Firefly Software Solutions Inc
+      email: dev@getfirefly.io
+  threads:
+    virtual:
+      enabled: true
+
+server:
+  address: ${SERVER_ADDRESS:localhost}
+  port: ${SERVER_PORT:8100}
+  shutdown: graceful
+
+api-configuration:
+  core-platform:
+    reference-master-data:
+      base-path: ${ENDPOINT_CORE_REFERENCE_MASTER_DATA:http://localhost:8060}
+  domain-platform:
+    core-configuration:
+      base-path: ${ENDPOINT_DOMAIN_CORE_CONFIGURATION:http://localhost:8080}
+    distributor-branding:
+      base-path: ${ENDPOINT_DOMAIN_DISTRIBUTOR_BRANDING:http://localhost:8050}
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tagsSorter: alpha
+    operationsSorter: method
+    docExpansion: none
+    filter: true
+  packages-to-scan: com.firefly.experience.channel.web.controllers
+  paths-to-match: /api/**
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  level:
+    root: INFO
+    com.firefly.experience.channel: DEBUG
+    org.fireflyframework: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+logging:
+  level:
+    com.firefly.experience.channel: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+logging:
+  level:
+    com.firefly.experience.channel: WARN
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
