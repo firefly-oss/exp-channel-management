@@ -72,7 +72,7 @@ class ChannelManagementServiceImplTest {
                 .sortOrder(0);
 
         PaginationResponse page = new PaginationResponse().content(List.of(sdkLocale));
-        when(languageLocaleApi.listLanguageLocales(anyInt(), anyInt(), anyString(), anyString()))
+        when(languageLocaleApi.listLanguageLocales(anyInt(), anyInt(), anyString(), anyString(), any()))
                 .thenReturn(Mono.just(page));
 
         StepVerifier.create(service.getLanguages())
@@ -88,7 +88,7 @@ class ChannelManagementServiceImplTest {
     @Test
     void getLanguages_returnsEmpty_whenPageContentIsNull() {
         PaginationResponse page = new PaginationResponse();
-        when(languageLocaleApi.listLanguageLocales(anyInt(), anyInt(), anyString(), anyString()))
+        when(languageLocaleApi.listLanguageLocales(anyInt(), anyInt(), anyString(), anyString(), any()))
                 .thenReturn(Mono.just(page));
 
         StepVerifier.create(service.getLanguages())
@@ -105,7 +105,7 @@ class ChannelManagementServiceImplTest {
                 .sortOrder(1);
 
         PaginationResponse page = new PaginationResponse().content(List.of(sdkLocale));
-        when(languageLocaleApi.listLanguageLocales(anyInt(), anyInt(), anyString(), anyString()))
+        when(languageLocaleApi.listLanguageLocales(anyInt(), anyInt(), anyString(), anyString(), any()))
                 .thenReturn(Mono.just(page));
 
         StepVerifier.create(service.getLanguages())
@@ -126,7 +126,7 @@ class ChannelManagementServiceImplTest {
                 .nativeName("Français")
                 .sortOrder(2);
 
-        when(languageLocaleApi.getLanguageLocale(eq(localeId))).thenReturn(Mono.just(sdkLocale));
+        when(languageLocaleApi.getLanguageLocale(eq(localeId), any())).thenReturn(Mono.just(sdkLocale));
 
         StepVerifier.create(service.getLanguage(localeId.toString()))
                 .assertNext(dto -> {
@@ -156,10 +156,8 @@ class ChannelManagementServiceImplTest {
         // Option C: verify active=true is always passed; ignore other params
         when(tenantBrandingsApi.filterTenantBrandings(
                 anyInt(), anyInt(),
-                any(), any(), any(), any(),
-                any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(),
-                eq(true),
-                any(), any(), any(), any(), any(), any(), any(), any(), any(),
+                any(), any(),
+                eq(true), any(),
                 any()
         )).thenReturn(Mono.just(page));
 
@@ -180,10 +178,8 @@ class ChannelManagementServiceImplTest {
 
         when(tenantBrandingsApi.filterTenantBrandings(
                 anyInt(), anyInt(),
-                any(), any(), any(), any(),
-                any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(),
-                eq(true),
-                any(), any(), any(), any(), any(), any(), any(), any(), any(),
+                any(), any(),
+                eq(true), any(),
                 any()
         )).thenReturn(Mono.just(emptyPage));
 
@@ -205,7 +201,7 @@ class ChannelManagementServiceImplTest {
         PaginationResponse page = new PaginationResponse()
                 .content(List.of(country, currency, docType, other));
 
-        when(lookupDomainsApi.listDomains(anyInt(), anyInt(), any(), any()))
+        when(lookupDomainsApi.listDomains(anyInt(), anyInt(), any(), any(), any()))
                 .thenReturn(Mono.just(page));
 
         StepVerifier.create(service.getMasterData())
@@ -220,7 +216,7 @@ class ChannelManagementServiceImplTest {
     @Test
     void getMasterData_returnsEmptyLists_whenNoDomains() {
         PaginationResponse page = new PaginationResponse().content(List.of());
-        when(lookupDomainsApi.listDomains(anyInt(), anyInt(), any(), any()))
+        when(lookupDomainsApi.listDomains(anyInt(), anyInt(), any(), any(), any()))
                 .thenReturn(Mono.just(page));
 
         StepVerifier.create(service.getMasterData())
@@ -242,7 +238,7 @@ class ChannelManagementServiceImplTest {
         LanguageLocaleDTO sdkLocale = new LanguageLocaleDTO()
                 .localeId(UUID.randomUUID()).languageName("English").nativeName("English").sortOrder(0);
         PaginationResponse langPage = new PaginationResponse().content(List.of(sdkLocale));
-        when(languageLocaleApi.listLanguageLocales(anyInt(), anyInt(), anyString(), anyString()))
+        when(languageLocaleApi.listLanguageLocales(anyInt(), anyInt(), anyString(), anyString(), any()))
                 .thenReturn(Mono.just(langPage));
 
         // Branding
@@ -252,17 +248,15 @@ class ChannelManagementServiceImplTest {
                 new PaginationResponseTenantBrandingDTO().content(List.of(sdkBranding));
         when(tenantBrandingsApi.filterTenantBrandings(
                 anyInt(), anyInt(),
-                any(), any(), any(), any(),
-                any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(),
-                eq(true),
-                any(), any(), any(), any(), any(), any(), any(), any(), any(),
+                any(), any(),
+                eq(true), any(),
                 any()
         )).thenReturn(Mono.just(brandPage));
 
         // Master data
         LookupDomainDTO country = new LookupDomainDTO().domainCode("COUNTRY_US").domainName("USA").status(LookupDomainDTO.StatusEnum.ACTIVE);
         PaginationResponse mdPage = new PaginationResponse().content(List.of(country));
-        when(lookupDomainsApi.listDomains(anyInt(), anyInt(), any(), any()))
+        when(lookupDomainsApi.listDomains(anyInt(), anyInt(), any(), any(), any()))
                 .thenReturn(Mono.just(mdPage));
 
         StepVerifier.create(service.getChannelInit())

@@ -76,7 +76,7 @@ public class ChannelManagementServiceImpl implements ChannelManagementService {
     @Override
     public Flux<LanguageDTO> getLanguages() {
         log.debug("Fetching language locale list");
-        return languageLocaleApi.listLanguageLocales(0, 1000, "sortOrder", "ASC")
+        return languageLocaleApi.listLanguageLocales(0, 1000, "sortOrder", "ASC", UUID.randomUUID().toString())
                 .flatMapMany(page -> Flux.fromIterable(
                         page.getContent() != null ? page.getContent() : List.of()
                 ))
@@ -87,7 +87,7 @@ public class ChannelManagementServiceImpl implements ChannelManagementService {
     @Override
     public Mono<LanguageDTO> getLanguage(String localeId) {
         log.debug("Fetching language locale for localeId={}", localeId);
-        return languageLocaleApi.getLanguageLocale(UUID.fromString(localeId))
+        return languageLocaleApi.getLanguageLocale(UUID.fromString(localeId), UUID.randomUUID().toString())
                 .map(this::toLanguageDTO);
     }
 
@@ -97,13 +97,8 @@ public class ChannelManagementServiceImpl implements ChannelManagementService {
         return tenantBrandingsApi.filterTenantBrandings(
                         0, 1,
                         null, null,
-                        null, null,
-                        null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-                        true,
-                        null, null, null,
-                        null, null, null,
-                        null, null, null,
-                        null
+                        true, null,
+                        UUID.randomUUID().toString()
                 )
                 .flatMap(page -> Mono.justOrEmpty(
                         page.getContent() != null && !page.getContent().isEmpty()
@@ -116,7 +111,7 @@ public class ChannelManagementServiceImpl implements ChannelManagementService {
     @Override
     public Mono<MasterDataDTO> getMasterData() {
         log.debug("Fetching reference master data");
-        return lookupDomainsApi.listDomains(0, 1000, "domainCode", "ASC")
+        return lookupDomainsApi.listDomains(0, 1000, "domainCode", "ASC", UUID.randomUUID().toString())
                 .flatMapMany(page -> Flux.fromIterable(
                         page.getContent() != null ? page.getContent() : List.of()
                 ))
