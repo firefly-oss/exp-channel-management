@@ -21,15 +21,11 @@
         <!-- Downstream Service SDKs (versions managed by firefly-bom via firefly-parent) -->
         <dependency>
             <groupId>com.firefly</groupId>
-            <artifactId>core-common-reference-master-data-sdk</artifactId>
+            <artifactId>domain-core-configuration-sdk</artifactId>
         </dependency>
         <dependency>
             <groupId>com.firefly</groupId>
             <artifactId>domain-distributor-branding-sdk</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.firefly</groupId>
-            <artifactId>core-common-config-mgmt-sdk</artifactId>
         </dependency>
 
         <!-- Common Libraries -->

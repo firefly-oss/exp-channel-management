@@ -16,9 +16,6 @@ server:
   shutdown: graceful
 
 api-configuration:
-  core-platform:
-    reference-master-data:
-      base-path: ${ENDPOINT_CORE_REFERENCE_MASTER_DATA:http://localhost:8060}
   domain-platform:
     core-configuration:
       base-path: ${ENDPOINT_DOMAIN_CORE_CONFIGURATION:http://localhost:8080}

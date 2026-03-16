@@ -2,14 +2,11 @@ package com.firefly.experience.channel.core.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.firefly.common.config.sdk.api.TenantBrandingsApi;
-import com.firefly.common.config.sdk.model.PaginationResponseTenantBrandingDTO;
-import com.firefly.common.config.sdk.model.TenantBrandingDTO;
-import com.firefly.common.reference.master.data.sdk.api.LanguageLocaleApi;
-import com.firefly.common.reference.master.data.sdk.api.LookupDomainsApi;
-import com.firefly.common.reference.master.data.sdk.model.LanguageLocaleDTO;
-import com.firefly.common.reference.master.data.sdk.model.LookupDomainDTO;
-import com.firefly.common.reference.master.data.sdk.model.PaginationResponse;
+import com.firefly.domain.configuration.sdk.api.ConfigurationQueriesApi;
+import com.firefly.domain.configuration.sdk.model.PaginationResponse;
+import com.firefly.domain.configuration.sdk.model.TenantBrandingDTO;
+import com.firefly.experience.channel.core.models.LanguageLocaleDTO;
+import com.firefly.experience.channel.core.models.LookupDomainDTO;
 import com.firefly.experience.channel.core.queries.BrandingDTO;
 import com.firefly.experience.channel.core.queries.ChannelInitDTO;
 import com.firefly.experience.channel.core.queries.LanguageDTO;
@@ -20,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -28,34 +26,27 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for {@link ChannelManagementServiceImpl}.
  * <p>
- * All downstream SDK APIs are mocked. A real {@link ObjectMapper} (with JavaTimeModule) is
- * used to exercise the {@code convertValue()} paths that re-hydrate {@code List<Object>}
- * pagination content into typed SDK model objects.
+ * The downstream {@link ConfigurationQueriesApi} is mocked. A real {@link ObjectMapper}
+ * (with JavaTimeModule) is used to exercise the {@code convertValue()} paths that
+ * re-hydrate {@code List<Object>} pagination content into typed model objects.
  */
 @ExtendWith(MockitoExtension.class)
 class ChannelManagementServiceImplTest {
 
     @Mock
-    private LanguageLocaleApi languageLocaleApi;
-    @Mock
-    private LookupDomainsApi lookupDomainsApi;
-    @Mock
-    private TenantBrandingsApi tenantBrandingsApi;
+    private ConfigurationQueriesApi configurationQueriesApi;
 
     private ChannelManagementServiceImpl service;
 
     @BeforeEach
     void setUp() {
         ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
-        service = new ChannelManagementServiceImpl(languageLocaleApi, lookupDomainsApi, tenantBrandingsApi, objectMapper);
+        service = new ChannelManagementServiceImpl(configurationQueriesApi, objectMapper);
     }
 
     // -------------------------------------------------------------------------
@@ -65,14 +56,15 @@ class ChannelManagementServiceImplTest {
     @Test
     void getLanguages_mapsLocaleListToLanguageDTOs() {
         UUID localeId = UUID.randomUUID();
-        LanguageLocaleDTO sdkLocale = new LanguageLocaleDTO()
+        LanguageLocaleDTO sdkLocale = LanguageLocaleDTO.builder()
                 .localeId(localeId)
                 .languageName("English")
                 .nativeName("English")
-                .sortOrder(0);
+                .sortOrder(0)
+                .build();
 
         PaginationResponse page = new PaginationResponse().content(List.of(sdkLocale));
-        when(languageLocaleApi.listLanguageLocales(anyInt(), anyInt(), anyString(), anyString(), any()))
+        when(configurationQueriesApi.getLanguages(any()))
                 .thenReturn(Mono.just(page));
 
         StepVerifier.create(service.getLanguages())
@@ -88,7 +80,7 @@ class ChannelManagementServiceImplTest {
     @Test
     void getLanguages_returnsEmpty_whenPageContentIsNull() {
         PaginationResponse page = new PaginationResponse();
-        when(languageLocaleApi.listLanguageLocales(anyInt(), anyInt(), anyString(), anyString(), any()))
+        when(configurationQueriesApi.getLanguages(any()))
                 .thenReturn(Mono.just(page));
 
         StepVerifier.create(service.getLanguages())
@@ -98,14 +90,15 @@ class ChannelManagementServiceImplTest {
     @Test
     void getLanguages_isDefault_falseForNonZeroSortOrder() {
         UUID localeId = UUID.randomUUID();
-        LanguageLocaleDTO sdkLocale = new LanguageLocaleDTO()
+        LanguageLocaleDTO sdkLocale = LanguageLocaleDTO.builder()
                 .localeId(localeId)
                 .languageName("Spanish")
                 .nativeName("Español")
-                .sortOrder(1);
+                .sortOrder(1)
+                .build();
 
         PaginationResponse page = new PaginationResponse().content(List.of(sdkLocale));
-        when(languageLocaleApi.listLanguageLocales(anyInt(), anyInt(), anyString(), anyString(), any()))
+        when(configurationQueriesApi.getLanguages(any()))
                 .thenReturn(Mono.just(page));
 
         StepVerifier.create(service.getLanguages())
@@ -120,13 +113,16 @@ class ChannelManagementServiceImplTest {
     @Test
     void getLanguage_fetchesSingleLocaleById() {
         UUID localeId = UUID.randomUUID();
-        LanguageLocaleDTO sdkLocale = new LanguageLocaleDTO()
+        LanguageLocaleDTO sdkLocale = LanguageLocaleDTO.builder()
                 .localeId(localeId)
                 .languageName("French")
                 .nativeName("Français")
-                .sortOrder(2);
+                .sortOrder(2)
+                .build();
 
-        when(languageLocaleApi.getLanguageLocale(eq(localeId), any())).thenReturn(Mono.just(sdkLocale));
+        PaginationResponse page = new PaginationResponse().content(List.of(sdkLocale));
+        when(configurationQueriesApi.getLanguages(any()))
+                .thenReturn(Mono.just(page));
 
         StepVerifier.create(service.getLanguage(localeId.toString()))
                 .assertNext(dto -> {
@@ -150,16 +146,8 @@ class ChannelManagementServiceImplTest {
                 .secondaryColor("#33FF57")
                 .active(true);
 
-        PaginationResponseTenantBrandingDTO page =
-                new PaginationResponseTenantBrandingDTO().content(List.of(sdkBranding));
-
-        // Option C: verify active=true is always passed; ignore other params
-        when(tenantBrandingsApi.filterTenantBrandings(
-                anyInt(), anyInt(),
-                any(), any(),
-                eq(true), any(),
-                any()
-        )).thenReturn(Mono.just(page));
+        when(configurationQueriesApi.getTenantBrandings(any()))
+                .thenReturn(Flux.just(sdkBranding));
 
         StepVerifier.create(service.getChannelBranding())
                 .assertNext(dto -> {
@@ -173,15 +161,8 @@ class ChannelManagementServiceImplTest {
 
     @Test
     void getChannelBranding_returnsEmpty_whenNoBrandingFound() {
-        PaginationResponseTenantBrandingDTO emptyPage =
-                new PaginationResponseTenantBrandingDTO().content(List.of());
-
-        when(tenantBrandingsApi.filterTenantBrandings(
-                anyInt(), anyInt(),
-                any(), any(),
-                eq(true), any(),
-                any()
-        )).thenReturn(Mono.just(emptyPage));
+        when(configurationQueriesApi.getTenantBrandings(any()))
+                .thenReturn(Flux.empty());
 
         StepVerifier.create(service.getChannelBranding())
                 .verifyComplete();
@@ -193,15 +174,15 @@ class ChannelManagementServiceImplTest {
 
     @Test
     void getMasterData_partitionsDomainsByCodePrefix() {
-        LookupDomainDTO country = new LookupDomainDTO().domainCode("COUNTRY_ES").domainName("Spain").status(LookupDomainDTO.StatusEnum.ACTIVE);
-        LookupDomainDTO currency = new LookupDomainDTO().domainCode("CURRENCY_EUR").domainName("Euro").status(LookupDomainDTO.StatusEnum.ACTIVE);
-        LookupDomainDTO docType = new LookupDomainDTO().domainCode("DOCUMENT_TYPE_PASSPORT").domainName("Passport").status(LookupDomainDTO.StatusEnum.ACTIVE);
-        LookupDomainDTO other = new LookupDomainDTO().domainCode("OTHER_THING").domainName("Other").status(LookupDomainDTO.StatusEnum.ACTIVE);
+        LookupDomainDTO country = LookupDomainDTO.builder().domainCode("COUNTRY_ES").domainName("Spain").status("ACTIVE").build();
+        LookupDomainDTO currency = LookupDomainDTO.builder().domainCode("CURRENCY_EUR").domainName("Euro").status("ACTIVE").build();
+        LookupDomainDTO docType = LookupDomainDTO.builder().domainCode("DOCUMENT_TYPE_PASSPORT").domainName("Passport").status("ACTIVE").build();
+        LookupDomainDTO other = LookupDomainDTO.builder().domainCode("OTHER_THING").domainName("Other").status("ACTIVE").build();
 
         PaginationResponse page = new PaginationResponse()
                 .content(List.of(country, currency, docType, other));
 
-        when(lookupDomainsApi.listDomains(anyInt(), anyInt(), any(), any(), any()))
+        when(configurationQueriesApi.getLookupDomains(any()))
                 .thenReturn(Mono.just(page));
 
         StepVerifier.create(service.getMasterData())
@@ -216,7 +197,7 @@ class ChannelManagementServiceImplTest {
     @Test
     void getMasterData_returnsEmptyLists_whenNoDomains() {
         PaginationResponse page = new PaginationResponse().content(List.of());
-        when(lookupDomainsApi.listDomains(anyInt(), anyInt(), any(), any(), any()))
+        when(configurationQueriesApi.getLookupDomains(any()))
                 .thenReturn(Mono.just(page));
 
         StepVerifier.create(service.getMasterData())
@@ -235,28 +216,22 @@ class ChannelManagementServiceImplTest {
     @Test
     void getChannelInit_aggregatesAllThreeSourcesInParallel() {
         // Languages
-        LanguageLocaleDTO sdkLocale = new LanguageLocaleDTO()
-                .localeId(UUID.randomUUID()).languageName("English").nativeName("English").sortOrder(0);
+        LanguageLocaleDTO sdkLocale = LanguageLocaleDTO.builder()
+                .localeId(UUID.randomUUID()).languageName("English").nativeName("English").sortOrder(0).build();
         PaginationResponse langPage = new PaginationResponse().content(List.of(sdkLocale));
-        when(languageLocaleApi.listLanguageLocales(anyInt(), anyInt(), anyString(), anyString(), any()))
+        when(configurationQueriesApi.getLanguages(any()))
                 .thenReturn(Mono.just(langPage));
 
         // Branding
         TenantBrandingDTO sdkBranding = new TenantBrandingDTO()
-                .logoUrl("https://example.com/logo.png").primaryColor("#111111").secondaryColor("#222222");
-        PaginationResponseTenantBrandingDTO brandPage =
-                new PaginationResponseTenantBrandingDTO().content(List.of(sdkBranding));
-        when(tenantBrandingsApi.filterTenantBrandings(
-                anyInt(), anyInt(),
-                any(), any(),
-                eq(true), any(),
-                any()
-        )).thenReturn(Mono.just(brandPage));
+                .logoUrl("https://example.com/logo.png").primaryColor("#111111").secondaryColor("#222222").active(true);
+        when(configurationQueriesApi.getTenantBrandings(any()))
+                .thenReturn(Flux.just(sdkBranding));
 
         // Master data
-        LookupDomainDTO country = new LookupDomainDTO().domainCode("COUNTRY_US").domainName("USA").status(LookupDomainDTO.StatusEnum.ACTIVE);
+        LookupDomainDTO country = LookupDomainDTO.builder().domainCode("COUNTRY_US").domainName("USA").status("ACTIVE").build();
         PaginationResponse mdPage = new PaginationResponse().content(List.of(country));
-        when(lookupDomainsApi.listDomains(anyInt(), anyInt(), any(), any(), any()))
+        when(configurationQueriesApi.getLookupDomains(any()))
                 .thenReturn(Mono.just(mdPage));
 
         StepVerifier.create(service.getChannelInit())
