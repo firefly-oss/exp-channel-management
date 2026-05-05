@@ -1,0 +1,182 @@
+openapi: 3.0.1
+info:
+  title: OpenAPI definition
+  version: v0
+servers:
+- url: http://localhost:18080
+  description: Generated server url
+tags:
+- name: Channel Management
+  description: Channel initialization and configuration endpoints
+paths:
+  /api/v1/experience/channel/master-data:
+    get:
+      tags:
+      - Channel Management
+      summary: All reference master data
+      description: "Returns all reference data (countries, currencies, document types)\
+        \ required for form rendering and validation."
+      operationId: getMasterData
+      parameters:
+      - name: X-Idempotency-Key
+        in: header
+        description: "Unique key for idempotent requests. If provided, ensures that\
+          \ identical requests with the same key will only be processed once."
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MasterDataDTO"
+  /api/v1/experience/channel/languages/{localeId}:
+    get:
+      tags:
+      - Channel Management
+      summary: Language detail
+      description: Retrieves a single language entry by its locale identifier.
+      operationId: getLanguage
+      parameters:
+      - name: localeId
+        in: path
+        description: Locale identifier (UUID string)
+        required: true
+        schema:
+          type: string
+      - name: X-Idempotency-Key
+        in: header
+        description: "Unique key for idempotent requests. If provided, ensures that\
+          \ identical requests with the same key will only be processed once."
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LanguageDTO"
+  /api/v1/experience/channel/languages:
+    get:
+      tags:
+      - Channel Management
+      summary: Available languages and locales
+      description: Lists all language/locale entries available for this channel.
+      operationId: getLanguages
+      parameters:
+      - name: X-Idempotency-Key
+        in: header
+        description: "Unique key for idempotent requests. If provided, ensures that\
+          \ identical requests with the same key will only be processed once."
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LanguageDTO"
+  /api/v1/experience/channel/init:
+    get:
+      tags:
+      - Channel Management
+      summary: Full channel initialization
+      description: "Returns languages, active branding, and reference master data\
+        \ in a single call. Intended for frontend bootstrap — minimises round-trips\
+        \ on app start."
+      operationId: getChannelInit
+      parameters:
+      - name: X-Idempotency-Key
+        in: header
+        description: "Unique key for idempotent requests. If provided, ensures that\
+          \ identical requests with the same key will only be processed once."
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChannelInitDTO"
+  /api/v1/experience/channel/branding:
+    get:
+      tags:
+      - Channel Management
+      summary: Active channel branding
+      description: Retrieves the active visual branding configuration for this channel.
+      operationId: getChannelBranding
+      parameters:
+      - name: X-Idempotency-Key
+        in: header
+        description: "Unique key for idempotent requests. If provided, ensures that\
+          \ identical requests with the same key will only be processed once."
+        required: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrandingDTO"
+components:
+  schemas:
+    MasterDataDTO:
+      type: object
+      properties:
+        countries:
+          type: array
+          items:
+            type: object
+        currencies:
+          type: array
+          items:
+            type: object
+        documentTypes:
+          type: array
+          items:
+            type: object
+    LanguageDTO:
+      type: object
+      properties:
+        localeId:
+          type: string
+        name:
+          type: string
+        nativeName:
+          type: string
+        default:
+          type: boolean
+    BrandingDTO:
+      type: object
+      properties:
+        logoUrl:
+          type: string
+        primaryColor:
+          type: string
+        secondaryColor:
+          type: string
+        theme:
+          type: string
+    ChannelInitDTO:
+      type: object
+      properties:
+        languages:
+          type: array
+          items:
+            $ref: "#/components/schemas/LanguageDTO"
+        branding:
+          $ref: "#/components/schemas/BrandingDTO"
+        masterData:
+          $ref: "#/components/schemas/MasterDataDTO"

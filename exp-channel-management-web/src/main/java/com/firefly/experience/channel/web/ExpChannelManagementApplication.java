@@ -23,7 +23,7 @@ import org.springframework.web.reactive.config.EnableWebFlux;
         }
 )
 @EnableWebFlux
-@ConfigurationPropertiesScan
+@ConfigurationPropertiesScan(basePackages = "com.firefly.experience.channel")
 @OpenAPIDefinition(
         info = @Info(
                 title = "${spring.application.name}",
