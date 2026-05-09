@@ -3,14 +3,10 @@ package com.firefly.experience.channel.core.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.firefly.domain.configuration.sdk.api.ConfigurationQueriesApi;
+import com.firefly.domain.configuration.sdk.model.LookupItemDTO;
 import com.firefly.domain.configuration.sdk.model.PaginationResponse;
 import com.firefly.domain.configuration.sdk.model.TenantBrandingDTO;
 import com.firefly.experience.channel.core.models.LanguageLocaleDTO;
-import com.firefly.experience.channel.core.models.LookupDomainDTO;
-import com.firefly.experience.channel.core.queries.BrandingDTO;
-import com.firefly.experience.channel.core.queries.ChannelInitDTO;
-import com.firefly.experience.channel.core.queries.LanguageDTO;
-import com.firefly.experience.channel.core.queries.MasterDataDTO;
 import com.firefly.experience.channel.core.services.impl.ChannelManagementServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,7 +17,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -173,38 +171,65 @@ class ChannelManagementServiceImplTest {
     // -------------------------------------------------------------------------
 
     @Test
-    void getMasterData_partitionsDomainsByCodePrefix() {
-        LookupDomainDTO country = LookupDomainDTO.builder().domainCode("COUNTRY_ES").domainName("Spain").status("ACTIVE").build();
-        LookupDomainDTO currency = LookupDomainDTO.builder().domainCode("CURRENCY_EUR").domainName("Euro").status("ACTIVE").build();
-        LookupDomainDTO docType = LookupDomainDTO.builder().domainCode("DOCUMENT_TYPE_PASSPORT").domainName("Passport").status("ACTIVE").build();
-        LookupDomainDTO other = LookupDomainDTO.builder().domainCode("OTHER_THING").domainName("Other").status("ACTIVE").build();
+    void getMasterData_projectsLookupItemsByDomainCode() {
+        LookupItemDTO spain = new LookupItemDTO().itemCode("ES").itemLabelDefault("Spain").sortOrder(0);
+        LookupItemDTO france = new LookupItemDTO().itemCode("FR").itemLabelDefault("France").sortOrder(1);
+        LookupItemDTO eur = new LookupItemDTO().itemCode("EUR").itemLabelDefault("Euro").sortOrder(0);
+        LookupItemDTO passport = new LookupItemDTO().itemCode("PASSPORT").itemLabelDefault("Passport").sortOrder(0);
 
-        PaginationResponse page = new PaginationResponse()
-                .content(List.of(country, currency, docType, other));
+        Map<String, List<LookupItemDTO>> lookups = new LinkedHashMap<>();
+        lookups.put("COUNTRY", List.of(spain, france));
+        lookups.put("CURRENCY", List.of(eur));
+        lookups.put("DOCUMENT_TYPE", List.of(passport));
 
-        when(configurationQueriesApi.getLookupDomains(any()))
-                .thenReturn(Mono.just(page));
+        when(configurationQueriesApi.getMasterDataLookups(any()))
+                .thenReturn(Mono.just(lookups));
 
         StepVerifier.create(service.getMasterData())
                 .assertNext(dto -> {
-                    assertThat(dto.getCountries()).hasSize(1);
+                    assertThat(dto.getCountries()).hasSize(2);
+                    assertThat(dto.getCountries().get(0).getCode()).isEqualTo("ES");
+                    assertThat(dto.getCountries().get(0).getLabel()).isEqualTo("Spain");
                     assertThat(dto.getCurrencies()).hasSize(1);
+                    assertThat(dto.getCurrencies().get(0).getCode()).isEqualTo("EUR");
                     assertThat(dto.getDocumentTypes()).hasSize(1);
+                    assertThat(dto.getDocumentTypes().get(0).getCode()).isEqualTo("PASSPORT");
+                    assertThat(dto.getEmploymentStatuses()).isEmpty();
                 })
                 .verifyComplete();
     }
 
     @Test
-    void getMasterData_returnsEmptyLists_whenNoDomains() {
-        PaginationResponse page = new PaginationResponse().content(List.of());
-        when(configurationQueriesApi.getLookupDomains(any()))
-                .thenReturn(Mono.just(page));
+    void getMasterData_returnsEmptyLists_whenLookupsAreEmpty() {
+        when(configurationQueriesApi.getMasterDataLookups(any()))
+                .thenReturn(Mono.just(new LinkedHashMap<>()));
 
         StepVerifier.create(service.getMasterData())
                 .assertNext(dto -> {
                     assertThat(dto.getCountries()).isEmpty();
                     assertThat(dto.getCurrencies()).isEmpty();
                     assertThat(dto.getDocumentTypes()).isEmpty();
+                    assertThat(dto.getRepresentativeRoles()).isEmpty();
+                })
+                .verifyComplete();
+    }
+
+    @Test
+    void getMasterData_sortsItemsByAscendingSortOrder() {
+        LookupItemDTO third = new LookupItemDTO().itemCode("C").itemLabelDefault("Third").sortOrder(2);
+        LookupItemDTO first = new LookupItemDTO().itemCode("A").itemLabelDefault("First").sortOrder(0);
+        LookupItemDTO second = new LookupItemDTO().itemCode("B").itemLabelDefault("Second").sortOrder(1);
+
+        Map<String, List<LookupItemDTO>> lookups = Map.of(
+                "COUNTRY", List.of(third, first, second));
+
+        when(configurationQueriesApi.getMasterDataLookups(any()))
+                .thenReturn(Mono.just(lookups));
+
+        StepVerifier.create(service.getMasterData())
+                .assertNext(dto -> {
+                    assertThat(dto.getCountries()).extracting("code")
+                            .containsExactly("A", "B", "C");
                 })
                 .verifyComplete();
     }
@@ -229,10 +254,10 @@ class ChannelManagementServiceImplTest {
                 .thenReturn(Flux.just(sdkBranding));
 
         // Master data
-        LookupDomainDTO country = LookupDomainDTO.builder().domainCode("COUNTRY_US").domainName("USA").status("ACTIVE").build();
-        PaginationResponse mdPage = new PaginationResponse().content(List.of(country));
-        when(configurationQueriesApi.getLookupDomains(any()))
-                .thenReturn(Mono.just(mdPage));
+        LookupItemDTO usa = new LookupItemDTO().itemCode("US").itemLabelDefault("United States").sortOrder(0);
+        Map<String, List<LookupItemDTO>> lookups = Map.of("COUNTRY", List.of(usa));
+        when(configurationQueriesApi.getMasterDataLookups(any()))
+                .thenReturn(Mono.just(lookups));
 
         StepVerifier.create(service.getChannelInit())
                 .assertNext(dto -> {
@@ -243,6 +268,7 @@ class ChannelManagementServiceImplTest {
                     assertThat(dto.getBranding().getPrimaryColor()).isEqualTo("#111111");
 
                     assertThat(dto.getMasterData().getCountries()).hasSize(1);
+                    assertThat(dto.getMasterData().getCountries().get(0).getCode()).isEqualTo("US");
                     assertThat(dto.getMasterData().getCurrencies()).isEmpty();
                 })
                 .verifyComplete();

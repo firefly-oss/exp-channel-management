@@ -3,6 +3,7 @@ package com.firefly.experience.channel.web.controllers;
 import com.firefly.experience.channel.core.queries.BrandingDTO;
 import com.firefly.experience.channel.core.queries.ChannelInitDTO;
 import com.firefly.experience.channel.core.queries.LanguageDTO;
+import com.firefly.experience.channel.core.queries.LookupEntryDTO;
 import com.firefly.experience.channel.core.queries.MasterDataDTO;
 import com.firefly.experience.channel.core.services.ChannelManagementService;
 import org.fireflyframework.web.error.config.ErrorHandlingProperties;
@@ -226,9 +227,9 @@ class ChannelManagementControllerTest {
     @Test
     void getMasterData_returns200WithMasterDataDTO() {
         MasterDataDTO dto = MasterDataDTO.builder()
-                .countries(List.of("COUNTRY_ES"))
-                .currencies(List.of("CURRENCY_EUR"))
-                .documentTypes(List.of("DOCUMENT_TYPE_PASSPORT"))
+                .countries(List.of(LookupEntryDTO.builder().code("ES").label("Spain").order(0).build()))
+                .currencies(List.of(LookupEntryDTO.builder().code("EUR").label("Euro").order(0).build()))
+                .documentTypes(List.of(LookupEntryDTO.builder().code("PASSPORT").label("Passport").order(0).build()))
                 .build();
 
         when(channelManagementService.getMasterData()).thenReturn(Mono.just(dto));
@@ -241,8 +242,11 @@ class ChannelManagementControllerTest {
                 .expectBody(MasterDataDTO.class)
                 .value(response -> {
                     assertThat(response.getCountries()).hasSize(1);
+                    assertThat(response.getCountries().get(0).getCode()).isEqualTo("ES");
                     assertThat(response.getCurrencies()).hasSize(1);
+                    assertThat(response.getCurrencies().get(0).getCode()).isEqualTo("EUR");
                     assertThat(response.getDocumentTypes()).hasSize(1);
+                    assertThat(response.getDocumentTypes().get(0).getLabel()).isEqualTo("Passport");
                 });
     }
 
