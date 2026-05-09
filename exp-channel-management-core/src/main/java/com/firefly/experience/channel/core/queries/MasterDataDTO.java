@@ -10,8 +10,9 @@ import java.util.List;
 /**
  * Journey-layer representation of reference master data required for channel initialisation.
  * <p>
- * Each list contains {@code LookupDomainDTO} items sourced from the reference-master-data SDK,
- * partitioned by conventional domain-code prefix (COUNTRY*, CURRENCY*, DOCUMENT_TYPE*).
+ * Each list contains {@link LookupEntryDTO} items sourced from the
+ * domain-core-configuration {@code /lookup-items} endpoint, partitioned by
+ * the well-known domain codes that the channel renders.
  */
 @Data
 @Builder
@@ -19,13 +20,18 @@ import java.util.List;
 @AllArgsConstructor
 public class MasterDataDTO {
 
-    /** Available country lookup entries. */
-    private List<Object> countries;
-
-    /** Available currency lookup entries. */
-    private List<Object> currencies;
-
-    /** Available document-type lookup entries. */
-    private List<Object> documentTypes;
+    private List<LookupEntryDTO> countries;
+    private List<LookupEntryDTO> currencies;
+    private List<LookupEntryDTO> documentTypes;
+    private List<LookupEntryDTO> employmentStatuses;
+    private List<LookupEntryDTO> contractTypes;
+    private List<LookupEntryDTO> housingTypes;
+    private List<LookupEntryDTO> maritalStatuses;
+    private List<LookupEntryDTO> loanPurposes;
+    private List<LookupEntryDTO> sectors;
+    private List<LookupEntryDTO> assetTypes;
+    private List<LookupEntryDTO> legalForms;
+    private List<LookupEntryDTO> employeeRanges;
+    private List<LookupEntryDTO> representativeRoles;
 
 }
