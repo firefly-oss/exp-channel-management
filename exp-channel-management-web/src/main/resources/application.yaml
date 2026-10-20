@@ -46,7 +46,7 @@ springdoc:
     operationsSorter: method
     docExpansion: none
     filter: true
-  packages-to-scan: com.firefly.experience.channel.web.controllers
+  packages-to-scan: io.fireflysoftware.experience.channel.web.controllers
   paths-to-match: /api/**
 
 management:
@@ -70,7 +70,7 @@ logging:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
   level:
     root: INFO
-    com.firefly.experience.channel: DEBUG
+    io.fireflysoftware.experience.channel: DEBUG
     org.fireflyframework: DEBUG
 
 ---
@@ -80,7 +80,7 @@ spring:
       on-profile: dev
 logging:
   level:
-    com.firefly.experience.channel: DEBUG
+    io.fireflysoftware.experience.channel: DEBUG
 
 ---
 spring:
@@ -89,7 +89,7 @@ spring:
       on-profile: prod
 logging:
   level:
-    com.firefly.experience.channel: WARN
+    io.fireflysoftware.experience.channel: WARN
 springdoc:
   api-docs:
     enabled: false
