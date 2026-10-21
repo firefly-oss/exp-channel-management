@@ -42,14 +42,10 @@ Frontend / Mobile Channel
          v
 exp-channel-management  (port 8100)
          |
-         +---> core-common-config-mgmt-sdk    (TenantBrandingsApi)
-         |
-         +---> domain-distributor-branding-sdk (BrandingApi)
-         |
-         +---> core-reference-master-data-sdk  (MasterDataApi)
+         +---> domain-core-configuration-sdk (ConfigurationQueriesApi)
 ```
 
-The `/init` endpoint uses `Mono.zip()` to call all three downstream services simultaneously, minimising total latency on channel start-up.
+The `/init` endpoint uses `Mono.zip()` to load languages, tenant branding, and master data from `domain-core-configuration` at the same time.
 
 ## Module Structure
 
@@ -84,9 +80,7 @@ The `/init` endpoint uses `Mono.zip()` to call all three downstream services sim
 
 | SDK | ClientFactory | APIs Used | Purpose |
 |-----|--------------|-----------|---------|
-| `core-common-config-mgmt-sdk` | `CoreConfigurationClientFactory` | `TenantBrandingsApi` | Tenant visual branding (logo, colours, theme) |
-| `domain-distributor-branding-sdk` | `DistributorBrandingClientFactory` | `BrandingApi` | Distributor-level branding configuration |
-| `core-reference-master-data-sdk` | `ReferenceMasterDataClientFactory` | `MasterDataApi`, `LanguageApi` | Countries, currencies, document types, language locales |
+| `domain-core-configuration-sdk` | `DomainConfigurationClientFactory` | `ConfigurationQueriesApi` | Languages, tenant branding, and reference master data |
 
 ## Configuration
 
@@ -101,8 +95,6 @@ api-configuration:
   domain-platform:
     core-configuration:
       base-path: ${ENDPOINT_DOMAIN_CORE_CONFIGURATION:http://localhost:8080}
-    distributor-branding:
-      base-path: ${ENDPOINT_DOMAIN_DISTRIBUTOR_BRANDING:http://localhost:8050}
 ```
 
 ### Environment Variables
@@ -112,8 +104,7 @@ api-configuration:
 | `SERVER_PORT` | `8100` | HTTP server port |
 | `SERVER_ADDRESS` | `localhost` | Bind address |
 | `ENDPOINT_CORE_REFERENCE_MASTER_DATA` | `http://localhost:8060` | Base URL for `core-reference-master-data` |
-| `ENDPOINT_DOMAIN_CORE_CONFIGURATION` | `http://localhost:8080` | Base URL for `core-common-config-mgmt` |
-| `ENDPOINT_DOMAIN_DISTRIBUTOR_BRANDING` | `http://localhost:8050` | Base URL for `domain-distributor-branding` |
+| `ENDPOINT_DOMAIN_CORE_CONFIGURATION` | `http://localhost:8080` | Base URL for `domain-core-configuration` |
 
 ## Running Locally
 

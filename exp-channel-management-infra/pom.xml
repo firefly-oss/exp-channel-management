@@ -24,10 +24,6 @@
             <groupId>io.fireflysoftware</groupId>
             <artifactId>domain-core-configuration-sdk</artifactId>
         </dependency>
-        <dependency>
-            <groupId>io.fireflysoftware</groupId>
-            <artifactId>domain-distributor-branding-sdk</artifactId>
-        </dependency>
 
         <!-- Common Libraries -->
         <dependency>

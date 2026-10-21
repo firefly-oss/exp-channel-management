@@ -33,8 +33,6 @@ api-configuration:
   domain-platform:
     core-configuration:
       base-path: ${ENDPOINT_DOMAIN_CORE_CONFIGURATION:http://localhost:8080}
-    distributor-branding:
-      base-path: ${ENDPOINT_DOMAIN_DISTRIBUTOR_BRANDING:http://localhost:8050}
 
 springdoc:
   api-docs:
